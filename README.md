@@ -12,6 +12,29 @@ Begin this Career Simulation by cloning the GitHub repo, installing dependencies
 
 We'll need to seed our database with some data. The database schema is currently broken, so we'll need to fix it. Go to `db/index.js` and fix the `createUser()` function.
 
+Solution:
+```
+// Correction on line 22: VALUES($1, $2, $3) -> VALUES($1, $2, $3, $4). There are four parameters so there should be four placeholders
+async function createUser({ 
+  username, 
+  password,
+  name,
+  location
+}) {
+  try {
+    const { rows: [ user ] } = await client.query(`
+      INSERT INTO users(username, password, name) 
+      VALUES($1, $2, $3, $4) 
+      ON CONFLICT (username) DO NOTHING 
+      RETURNING *;
+    `, [username, password, name, location]);
+
+    return user;
+  } catch (error) {
+    throw error;
+  }
+} 
+```
 ### Problem 2: Create a Middleware Function
 
 The function `requireUser` is missing it's code. We need it to check if a user is logged in, and if so, attach the user to the request object. Navigate to `api/utils.js` and write the middleware function.

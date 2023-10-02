@@ -118,7 +118,30 @@ postsRouter.patch('/:postId', requireUser, async (req, res, next) => {
 });
 
 postsRouter.delete('/:postId', requireUser, async (req, res, next) => {
-  res.send({ message: 'under construction' });
+  try {
+    const { postId } = req.params;
+    const postToDelete = await getPostById(postId);
+    if(!postToDelete) {
+      next({
+        name: 'Not found',
+        message: `No post by ID ${postId}`
+      }) ;
+    } 
+
+    if (originalPost.author.id === req.user.id) {
+      // If the authenticated user is the author of the post, delete it
+      await deletePost(postId);
+      res.send({ message: 'Post deleted successfully' });
+    } else {
+      // If the authenticated user is not the author, they cannot delete the post
+      next({
+        name: 'UnauthorizedUserError',
+        message: 'You cannot delete a post that is not yours'
+      });
+    }
+  } catch ({ name, message }) {
+    next({ name, message });
+  }
 });
 
 module.exports = postsRouter;
